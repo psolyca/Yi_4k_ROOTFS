@@ -26,4 +26,7 @@ $mksquashfs rootfs/ firmwaresubfolder/_part_rfs.a9s -comp lzo -no-xattrs
 $./amba_fwpack_yi.py -p -f yourmodifiedfirmware.bin -d firmwaresubfolder
 ```
 
-!! No devices in /dev after git commit. !!
+**DO NOT USE THIS REPOSITORY AS-IS.**
+Some special files are missing and files permission are not kept during git transfert.
+A script is available to change permissions and owner but it is not completely tested for now.
+Missing devices in dev folder.
