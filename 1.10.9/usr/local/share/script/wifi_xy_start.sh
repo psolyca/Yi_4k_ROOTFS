@@ -1,5 +1,11 @@
 #!/bin/sh
 
+if [ "${1}" == "sta" ]; then
+	export WIFI_MODE="sta"
+else
+	export WIFI_MODE="ap"
+fi
+
 if [ "${1}" == "fast" ]; then
     if [ -e /sys/module/bcmdhd ]; then
         wl up
@@ -58,37 +64,8 @@ wait_wlan0 ()
 }
 
 SYNC_CONIG
-set_conf()
-{
 conf=`cat ${WIFI_CONFIGURE_PATH} | grep -Ev "^#"`
-export `echo "${conf}"|grep -v PASSW|grep -v SSID|grep -vI $'^\xEF\xBB\xBF'`
-export PASSWORD=`echo "${conf}" | grep PASSWORD | cut -c 10-`
-export AP_PASSWD=`echo "${conf}" | grep AP_PASSWD | cut -c 11-`
-export AP_COUNTRY=`echo "${conf}" | grep AP_COUNTRY | cut -c 12-`
-export ESSID=`echo "${conf}" | grep ESSID | cut -c 7-`
-export AP_SSID=`echo "${conf}" | grep AP_SSID | cut -c 9-`
-export AP_CHANNEL_5G=`echo "${conf}" | grep AP_CHANNEL_5G | cut -c 15-`
-export STA_DEVICE_NAME=`echo "${conf}" | grep STA_DEVICE_NAME | cut -c 17-`
-export CHIP_TYPE=`echo "${conf}" | grep CHIP_TYPE | cut -c 11-`
-}
-
-set_sta_conf()
-{
-conf=`cat /tmp/SD0/sta.conf | grep -Ev "^#"`
-export `echo "${conf}"|grep -v PASSW|grep -v SSID|grep -vI $'^\xEF\xBB\xBF'`
-export WIFI_MODE="sta"
-export WIFI_EN_GPIO=124
-export AP_COUNTRY=`echo "${conf}" | grep COUNTRY_CODE | cut -c 14-`
-export PASSWORD=`echo "${conf}" | grep PASSWORD | cut -c 10-`
-export ESSID=`echo "${conf}" | grep SSID | cut -c 6-`
-export STA_DEVICE_NAME=`echo "${conf}" | grep DEVICE_NAME | cut -c 13-`
-}
-if [ -e /tmp/fuse_d/sta.conf ]; then
-    dos2unix /tmp/fuse_d/sta.conf
-    set_sta_conf
-else
-    set_conf
-fi
+export `echo "${conf}"|grep -v WIFI_MODE`
 
 if [ "${WIFI_SWITCH_GPIO}" != "" ]; then
     WIFI_SWITCH_VALUE=`/usr/local/share/script/t_gpio.sh ${WIFI_SWITCH_GPIO}`
@@ -131,12 +108,12 @@ if [ -n "`ls /sys/bus/sdio/devices`" ] || [ -e /sys/bus/usb/devices/*/net ]; the
     wait_wlan0
 fi
 if [ $waitagain -ne 0 ]; then
-    echo "There is no WIFI interface!pls check wifi dirver or fw"
+    echo "There is no WIFI interface! pls check wifi driver or fw"
     exit 1
 fi
 
 echo "Found  WIFI interface!"
-if [ "${WIFI_MODE}" == "sta" ] ; then
+if [ "${WIFI_MODE}" == "sta" ]; then
     /usr/local/share/script/sta_xy_start.sh $@
 else
     /usr/local/share/script/ap_xy_start.sh $@

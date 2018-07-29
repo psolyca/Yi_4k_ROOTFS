@@ -9,7 +9,7 @@ if [ -e /tmp/fuse_d/STA.DEBUG/WiFi.sh ]; then
     /tmp/fuse_d/STA.DEBUG/WiFi.sh $@
 else
     echo "start Wi-Fi from system ..."
-    /usr/local/share/script/wifi_xc_start.sh $@
+    /usr/local/share/script/wifi_xy_start.sh "sta"
 fi
 
 echo "restart Wi-Fi finished ..."
