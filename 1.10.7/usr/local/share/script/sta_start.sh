@@ -84,7 +84,7 @@ wait_ip_done ()
 	if [ "${wlan0_ready}" != "" ]; then
 		#send net status update message (Network ready, STA mode)
 		if [ -x /usr/bin/SendToRTOS ]; then
-			/usr/bin/SendToRTOS sta_connected $REMASK
+			/usr/bin/SendToRTOS net_ready ${ESSID}
 		elif [ -x /usr/bin/boot_done ]; then
 			boot_done 1 2 1
 		fi
@@ -198,7 +198,7 @@ WPA_GO ()
 	wait_ip_done
 }
 
-
+ifconfig wlan0 up
 check_country_setting_channel
 WPA_SCAN
 killall wpa_supplicant
