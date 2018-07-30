@@ -1,11 +1,5 @@
 #!/bin/sh
 
-if [ "${1}" == "sta" ]; then
-	export WIFI_MODE="sta"
-else
-	export WIFI_MODE="ap"
-fi
-
 if [ "${1}" == "fast" ]; then
     if [ -e /sys/module/bcmdhd ]; then
         wl up
@@ -16,19 +10,32 @@ fi
 
 export WIFI_CONFIGURE_PATH="/tmp/wifi.conf"
 
-SYNC_CONIG ()
+SYNC_CONFIG ()
 {
-    # SDCard
-    if [ -e /tmp/fuse_d/wifi.conf ]; then
-        echo "Load wifi.conf from SDCard ..."
-        rm -rf ${WIFI_CONFIGURE_PATH}
-        cp -rf /tmp/fuse_d/wifi.conf ${WIFI_CONFIGURE_PATH}
-    fi
-    # system
+	# Use the default configuration file for values which are set
+	# by the menu or do not need to be changed
+	# WIFI_MODE, WIFI_EN_GPIO, AP_COUNTRY, AP_CHANNEL_5G and WIFI_MAC
+	# If a wifi.conf exists on the SDCard, these values superseed the
+	# default one.
+
+    # system (should already exists with wifi_configure.sh
     if [ ! -e ${WIFI_CONFIGURE_PATH} ]; then
         echo "Load wifi.conf from system ..."
         cp -rf /usr/local/share/script/wifi.conf ${WIFI_CONFIGURE_PATH}
+	fi
+
+	# SDCard
+    if [ -e /tmp/fuse_d/wifi.conf ]; then
+        echo "Load wifi.conf from SDCard ..."
+		conf=`cat /tmp/fuse_d/wifi.conf | grep -Ev "^#"`
+		for i in ${conf}
+			do
+				sed -i 's/^'${i%=*}='.*$/'$i'/g' ${WIFI_CONFIGURE_PATH}
+		done
     fi
+	conf=`cat ${WIFI_CONFIGURE_PATH} | grep -Ev "^#"`
+	export `echo "${conf}"`
+
 }
 
 wait_mmc_add ()
@@ -63,9 +70,7 @@ wait_wlan0 ()
     done
 }
 
-SYNC_CONIG
-conf=`cat ${WIFI_CONFIGURE_PATH} | grep -Ev "^#"`
-export `echo "${conf}"|grep -v WIFI_MODE`
+SYNC_CONFIG
 
 if [ "${WIFI_SWITCH_GPIO}" != "" ]; then
     WIFI_SWITCH_VALUE=`/usr/local/share/script/t_gpio.sh ${WIFI_SWITCH_GPIO}`
