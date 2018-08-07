@@ -213,11 +213,13 @@ if [ "${scan_entry}" == "" ]; then
 fi
 
 if [ "${scan_entry}" == "" ]; then
-	echo -e "\033[031m failed to detect SSID ${ESSID}, use /usr/local/share/script/wpa_supplicant.conf: \033[0m"
-	cp /usr/local/share/script/wpa_supplicant.conf /tmp/
-	cat /tmp/wpa_supplicant.conf
-	WPA_GO
-	exit 0
+	echo -e "\033[031m failed to detect SSID ${ESSID}, force FAKE ESSID to be able to control the cam (manual stop). \033[0m"
+	if [ -x /usr/bin/SendToRTOS ]; then
+		/usr/bin/SendToRTOS net_ready "FAKE"
+	elif [ -x /usr/bin/boot_done ]; then
+		/usr/bin/boot_done 1 2 1
+	fi
+	exit 1
 fi
 
 echo -e "\033[031m ${scan_entry} \033[0m"
