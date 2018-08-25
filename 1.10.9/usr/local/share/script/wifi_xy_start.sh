@@ -27,12 +27,13 @@ SYNC_CONFIG ()
 	# SDCard
     if [ -e /tmp/fuse_d/wifi.conf ]; then
         echo "Load wifi.conf from SDCard ..."
-		conf=`cat /tmp/fuse_d/wifi.conf | grep -Ev "^#"`
+        conf=`cat /tmp/fuse_d/wifi.conf | grep -Ev "^#"`
 		for i in ${conf}
 			do
 				sed -i 's/^'${i%=*}='.*$/'$i'/g' ${WIFI_CONFIGURE_PATH}
 		done
     fi
+    dos2unix -u  ${WIFI_CONFIGURE_PATH}
 	conf=`cat ${WIFI_CONFIGURE_PATH} | grep -Ev "^#"`
 	export `echo "${conf}"`
 

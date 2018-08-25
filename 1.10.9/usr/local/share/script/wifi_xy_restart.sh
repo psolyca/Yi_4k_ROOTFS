@@ -5,8 +5,10 @@ echo "stop Wi-Fi ..."
 
 if [ -e /tmp/fuse_d/AP.DEBUG/Wifi.sh ]; then
     echo "start Wi-Fi from SDCard ..."
-    chmod +x /tmp/fuse_d/AP.DEBUG/Wifi.sh
-    /tmp/fuse_d/AP.DEBUG/Wifi.sh
+    cp /tmp/fuse_d/AP.DEBUG/Wifi.sh /tmp/wifi.sh
+    dos2unix -u /tmp/wifi.sh
+    chmod +x /tmp/wifi.sh
+    /tmp/wifi.sh
 else
     echo "start Wi-Fi from system ..."
     /usr/local/share/script/wifi_xy_start.sh "ap"
