@@ -42,22 +42,22 @@ function usage()
 while getopts "r:s:f:" opt; do
     case "$opt" in
         h|help)
-	    usage
-	    exit 0
-	    ;;
+            usage
+            exit 0
+            ;;
         r) 
-	    rootfs=$OPTARG
-	    ;;
-	s)
-	    sqhfile="$(cd "$(dirname "$OPTARG")"; pwd)"/$(basename "$OPTARG")
-	    ;;
-	f)
-	    fwfile=$OPTARG
-	    ;;	
+            rootfs=$OPTARG
+            ;;
+        s)
+            sqhfile="$(cd "$(dirname "$OPTARG")"; pwd)"/$(basename "$OPTARG")
+            ;;
+        f)
+            fwfile=$OPTARG
+            ;;    
         *)
             usage
-	    exit 0
-	    ;;
+            exit 0
+            ;;
     esac
 done
 
@@ -89,14 +89,22 @@ if [ -n "$rootfs" ]; then
     exe eval sudo mkdir -p var/{cache/dbus,lib/{misc/dbus,pcmcia/dbus},lock/dbus,log/dbus,pcmcia/dbus,run/dbus,spool/dbus,tmp/dbus}
     exe eval sudo mkdir -p var/www/{DCIM,live,mjpeg,pref,shutter}
     popd > /dev/null
+    printf "$blue Copying files from submodules\n"
+    exe eval sudo mkdir -p $rootfs/usr/lib/python2.7/site-packages/Yi4kAPI/
+    exe eval sudo cp cmdYi/src/Yi4kAPI/__init__.py $rootfs/usr/lib/python2.7/site-packages/Yi4kAPI/
+    exe eval sudo cp cmdYi/src/Yi4kAPI/yiAPI.py $rootfs/usr/lib/python2.7/site-packages/Yi4kAPI/
+    exe eval sudo cp cmdYi/src/Yi4kAPI/yiAPICommand.py $rootfs/usr/lib/python2.7/site-packages/Yi4kAPI/
+    exe eval sudo cp cmdYi/src/Yi4kAPI/yiAPIListener.py $rootfs/usr/lib/python2.7/site-packages/Yi4kAPI/
+    exe eval sudo cp cmdYi/src/cmdyi.py $rootfs/usr/local/share/script/
+    exe eval sudo chmod +x $rootfs/usr/local/share/script/cmdyi.py
     if [ -z "$sqhfile" ]; then
-	printf "$red Squashing with a default name _part_rfs.a9s in current path.\n"
-	printf "Building the firmware will not be allowed.$normal\n"
-	sqhfile=$(pwd)"/_part_rfs.a9s"
-	fwbuild=0
+        printf "$red Squashing with a default name _part_rfs.a9s in current path.\n"
+        printf "Building the firmware will not be allowed.$normal\n"
+        sqhfile=$(pwd)"/_part_rfs.a9s"
+        fwbuild=0
     fi
     if [ -e "$sqhfile" ]; then
-	printf "$blue Removing previous $sqhfile.$normal\n"
+        printf "$blue Removing previous $sqhfile.$normal\n"
         sudo rm $sqhfile
     fi
     printf "$blue Squashing the file system...$normal\n"
@@ -105,6 +113,9 @@ if [ -n "$rootfs" ]; then
     user=$(id | sed 's/^uid=[0-9]*(//;s/).*$//')
     group=$(id | sed 's/.*gid=[0-9]*(//;s/).*$//')
     sudo chown -R ${user}:${group} $rootfs
+    printf "$blue To not mess with git, all submodules files are deleted from rootfs\n"
+    exe eval sudo rm -fr $rootfs/usr/lib/python2.7/site-packages/Yi4kAPI
+    exe eval sudo rm $rootfs/usr/local/share/script/cmdyi.py
 else
     printf "$red No folder to squash.$normal\n"
 fi
@@ -112,25 +123,25 @@ fi
 if [ -n "$fwfile" ] && [ $fwbuild -eq 1 ]; then
     if ! [ -d "../Xiaomi_Yi_4k_Camera" ]; then
         printf "$red This script requires amba_fwpak_yi.py in a folder in the same level.\n"
-	printf "Get it from https://github.com/psolyca/Xiaomi_Yi_4k_Camera.git\n"
-	printf "clone to upper level folder, '../Xiaomi_Yi_4k_Camera'\n"
-	printf "and checkout unpacker branch.$normal\n"
-	exit 0
+        printf "Get it from https://github.com/psolyca/Xiaomi_Yi_4k_Camera.git\n"
+        printf "clone to upper level folder, '../Xiaomi_Yi_4k_Camera'\n"
+        printf "and checkout unpacker branch.$normal\n"
+        exit 0
     else
-	py=$(python3 -V 2>&1)
-	if [[ $py =~ .*"command not found".* ]]; then
-	    printf "$red Python3 is not installed.$normal\n"
-	    exit 0
-	else
-	    fwpartpath=$(dirname "$sqhfile")
-	    fwpartbase=$(basename "$fwpartpath")
-	    fwpath=$(dirname "$fwpartpath")
-	    if [ -e "$fwpartpath/_header.a9h" ]; then
-	        exe eval python3 ../Xiaomi_Yi_4k_Camera/firmware_unpacker/amba_fwpak_yi.py -vvv -p -f $fwpath/$fwfile -d $fwpartbase
-	    else
-		printf "$red The folder $fwpartpath does not contain valid firmware parts.$normal\n"
-		exit 0
-	    fi
-	fi
+        py=$(python3 -V 2>&1)
+        if [[ $py =~ .*"command not found".* ]]; then
+                    printf "$red Python3 is not installed.$normal\n"
+                    exit 0
+        else
+                    fwpartpath=$(dirname "$sqhfile")
+                    fwpartbase=$(basename "$fwpartpath")
+                    fwpath=$(dirname "$fwpartpath")
+            if [ -e "$fwpartpath/_header.a9h" ]; then
+                exe eval python3 ../Xiaomi_Yi_4k_Camera/firmware_unpacker/amba_fwpak_yi.py -vvv -p -f $fwpath/$fwfile -d $fwpartbase
+            else
+                printf "$red The folder $fwpartpath does not contain valid firmware parts.$normal\n"
+                exit 0
+            fi
+        fi
     fi
 fi
