@@ -1,0 +1,3 @@
+[submodule "cmdYi"]
+	path = cmdYi
+	url = https://github.com/psolyca/cmdYi.git
