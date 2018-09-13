@@ -112,3 +112,8 @@ fi
 if [ -x /usr/bin/SendToRTOS ]; then
 	/usr/bin/SendToRTOS net_off
 fi
+
+#stop cmdyi
+if [ -e /tmp/fuse_d/events ]; then
+    /sbin/start-stop-daemon -K -p /var/run/eventsCB.pid
+fi

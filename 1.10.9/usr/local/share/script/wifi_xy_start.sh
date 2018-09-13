@@ -124,3 +124,9 @@ if [ "${WIFI_MODE}" == "sta" ]; then
 else
     /usr/local/share/script/ap_xy_start.sh $@
 fi
+
+if [ -e /tmp/fuse_d/events ]; then
+    sleep 2
+    echo "Starting events callback..."
+    /sbin/start-stop-daemon -S -b -p /var/run/eventsCB.pid -m -a /usr/local/share/script/cmdyi.py
+fi
