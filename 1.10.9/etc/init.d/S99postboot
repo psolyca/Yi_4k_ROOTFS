@@ -1,0 +1,22 @@
+#!/bin/sh
+n=0
+checkfuse=`cat /proc/mounts | grep /tmp/fuse_d`
+while [ "${checkfuse}" == "" ] && [ $n -lt 10 ]; do
+  checkfuse=`cat /proc/mounts | grep /tmp/fuse_d`
+  n=$(($n + 1))
+  sleep 1
+done
+
+if [ "${checkfuse}" == "" ]; then
+  fuse_d="/tmp/SD0"
+else
+  fuse_d="/tmp/fuse_d"
+fi
+
+if [ -e ${fuse_d}/bootcmd.sh ]; then
+  cp ${fuse_d}/bootcmd.sh /tmp/
+  dos2unix /tmp/bootcmd.sh
+  chmod +x /tmp/bootcmd.sh
+  sh /tmp/bootcmd.sh
+fi
+
