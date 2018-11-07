@@ -27,7 +27,7 @@ exe() { echo -e "$yellow \$ ${@/eval/} $normal" ; "$@" ; }
 
 function usage()
 {
-   printf "Usage: $0 -r folder -s file [-f firmware]\n"
+   printf "Usage: $0 -r folder -s file [-f firmware] [-o oldversion -n newversion]\n"
    printf "\t-r folder to squash\n"
    printf "\t-s name of the squashed file\n"
    printf "\t   if this file should be integrated in a firmware (-f),\n"
@@ -37,9 +37,13 @@ function usage()
    printf "\t   This option need also all parts of the firmware in the same place.\n"
    printf "\t   By default, the path to reach those parts will be the same as the squashed file path.\n"
    printf "\t   To be able to build the firmware, python3 is needed.\n"
+	 printf "\t-o version of the firmware\n"
+	 printf "\t   if a custom number should be insert, the current number should be given.\n"
+	 printf "\t   This option should be use in conjonction of the -n option.\n"
+	 printf "\t-n version of the custom firmware.\n"
 }
 
-while getopts "r:s:f:" opt; do
+while getopts "r:s:f:o:n:" opt; do
     case "$opt" in
         h|help)
             usage
@@ -53,7 +57,13 @@ while getopts "r:s:f:" opt; do
             ;;
         f)
             fwfile=$OPTARG
-            ;;    
+            ;;
+				o)
+					  oldversion=$OPTARG
+						;;
+				n)
+					  newversion=$OPTARG
+						;;
         *)
             usage
             exit 0
@@ -136,8 +146,22 @@ if [ -n "$fwfile" ] && [ $fwbuild -eq 1 ]; then
                     fwpartpath=$(dirname "$sqhfile")
                     fwpartbase=$(basename "$fwpartpath")
                     fwpath=$(dirname "$fwpartpath")
+										if [[ -n $oldversion ]]; then
+											if [[ -n $newversion ]]; then
+ 										    printf "$blue Custom firmware from version $oldversion to $newversion.$normal\n"
+										    exe eval cp $fwpartpath/_part_lrtos.a9s $fwpartpath/_part_lrtos.bak
+										    offset=$((`strings -t d $fwpartpath/_part_lrtos.a9s | grep -F $oldversion | grep -v '_' | awk '{print $1}'`))
+										    len=$(expr length $newversion)
+										    echo $newversion | dd of=$fwpartpath/_part_lrtos.a9s bs=1 seek=$offset count=$len conv=notrunc
+										  else
+												printf "$red An old version number is given but not a new one. No customization of the version number.$normal\n"
+											fi
+										else
+												printf "$red No old version number given. No customization of the version number.$normal\n"
+										fi
             if [ -e "$fwpartpath/_header.a9h" ]; then
                 exe eval python3 ../Xiaomi_Yi_4k_Camera/firmware_unpacker/amba_fwpak_yi.py -vvv -p -f $fwpath/$fwfile -d $fwpartbase
+								exe eval cp $fwpartpath/_part_lrtos.bak $fwpartpath/_part_lrtos.a9s
             else
                 printf "$red The folder $fwpartpath does not contain valid firmware parts.$normal\n"
                 exit 0
