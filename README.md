@@ -4,6 +4,8 @@ The goal is to optimize / debug Yi 4k Linux filesystem.
 
 **Only Yi 4k (aka Z16V13L****)
 
+[![Discord Chat](https://img.shields.io/discord/553165905605951508.svg)](https://discord.gg/bQUA3Es) 
+
 ToDo :
 
   - ~~debug wifi mode (ap/sta)~~ commit #[7e9382e](https://github.com/psolyca/Yi_4k_ROOTFS/commit/7e9382e556f670d2be3abeffc287ee5276b95c62)
