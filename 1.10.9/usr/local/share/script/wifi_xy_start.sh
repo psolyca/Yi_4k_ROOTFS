@@ -12,30 +12,40 @@ export WIFI_CONFIGURE_PATH="/tmp/wifi.conf"
 
 SYNC_CONFIG ()
 {
-	# Use the default configuration file for values which are set
-	# by the menu or do not need to be changed
-	# WIFI_MODE, WIFI_EN_GPIO, AP_COUNTRY, AP_CHANNEL_5G and WIFI_MAC
-	# If a wifi.conf exists on the SDCard, these values superseed the
-	# default one.
+    # Use the default configuration file for values which are set
+    # by the menu or do not need to be changed
+    # WIFI_MODE, WIFI_EN_GPIO, AP_COUNTRY, AP_CHANNEL_5G and WIFI_MAC
+    # If a wifi.conf exists on the SDCard, these values superseed the
+    # default one.
 
     # system (should already exists with wifi_configure.sh
     if [ ! -e ${WIFI_CONFIGURE_PATH} ]; then
         echo "Load wifi.conf from system ..."
         cp -rf /usr/local/share/script/wifi.conf ${WIFI_CONFIGURE_PATH}
-	fi
+    fi
 
-	# SDCard
+    # FL0
+    if [ -e /tmp/FL0/wifi.conf ]; then
+        echo "Load wifi.conf from FL0 ..."
+        conf=`cat /tmp/FL0/wifi.conf | grep -Ev "^#"`
+        for i in ${conf}
+            do
+                sed -i 's/^'${i%=*}='.*$/'$i'/g' ${WIFI_CONFIGURE_PATH}
+        done
+    fi
+
+    # SDCard
     if [ -e /tmp/fuse_d/wifi.conf ]; then
         echo "Load wifi.conf from SDCard ..."
         conf=`cat /tmp/fuse_d/wifi.conf | grep -Ev "^#"`
-		for i in ${conf}
-			do
-				sed -i 's/^'${i%=*}='.*$/'$i'/g' ${WIFI_CONFIGURE_PATH}
-		done
+        for i in ${conf}
+            do
+                sed -i 's/^'${i%=*}='.*$/'$i'/g' ${WIFI_CONFIGURE_PATH}
+        done
     fi
     dos2unix -u  ${WIFI_CONFIGURE_PATH}
-	conf=`cat ${WIFI_CONFIGURE_PATH} | grep -Ev "^#"`
-	export `echo "${conf}"`
+    conf=`cat ${WIFI_CONFIGURE_PATH} | grep -Ev "^#"`
+    export `echo "${conf}"`
 
 }
 
