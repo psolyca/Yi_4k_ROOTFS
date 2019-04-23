@@ -1,4 +1,12 @@
 #!/bin/sh
+STA_IP=""
+if [ -e /tmp/FL0/wifi.conf ]; then
+    STA_IP=`cat /tmp/FL0/wifi.conf | grep -Ev "^#" | grep STA_IP | cut -c 8-`
+fi
+if [ -e /tmp/fuse_d/wifi.conf ]; then
+    STA_IP=`cat /tmp/fuse_d/wifi.conf | grep -Ev "^#" | grep STA_IP | cut -c 8-`
+fi
+
 check_country_setting_channel()
 {
 	echo $AP_COUNTRY
@@ -102,11 +110,17 @@ fi
 if [ "${1}" != "" ] && [ -e /tmp/wpa_supplicant.conf ]; then
 	cat /tmp/wpa_supplicant.conf
 	wpa_supplicant -D${driver} -iwlan0 -c/tmp/wpa_supplicant.conf -B
-    if [ "$STA_DEVICE_NAME" != " " ]; then
-        udhcpc -i wlan0 -h "${STA_DEVICE_NAME}" -A 1 -b
-    else
-        udhcpc -i wlan0 -h 'XiaoYi SportCam 2' -A 1 -b
-    fi
+	if [ "$STA_IP" != "" ]; then
+		ifconfig wlan0 $STA_IP netmask 255.255.255.0
+	else
+	    if [ "$STA_DEVICE_NAME" != " " ]; then
+	        #udhcpc -i wlan0 -h "${STA_DEVICE_NAME}" -A 1 -b
+	        udhcpc -i wlan0 -A 1 -b -x hostname:${STA_DEVICE_NAME}
+	    else
+	        #udhcpc -i wlan0 -h 'XiaoYi SportCam 2' -A 1 -b
+	        udhcpc -i wlan0 -A 1 -b -x hostname:'XiaoYi SportCam 2'
+	    fi
+	fi
 	wait_ip_done
 	exit 0
 fi
@@ -190,11 +204,17 @@ WPA_GO ()
 {
 	killall -9 wpa_supplicant 2>/dev/null
 	wpa_supplicant -D${driver} -iwlan0 -c/tmp/wpa_supplicant.conf -B
-    if [ "$STA_DEVICE_NAME" != " " ]; then
-	    udhcpc -i wlan0 -h "${STA_DEVICE_NAME}" -A 1 -b
-    else
-	    udhcpc -i wlan0 -h 'XiaoYi SportCam 2' -A 1 -b
-    fi
+	if [ "$STA_IP" != "" ]; then
+		ifconfig wlan0 $STA_IP netmask 255.255.255.0
+	else
+	    if [ "$STA_DEVICE_NAME" != " " ]; then
+		    #udhcpc -i wlan0 -h "${STA_DEVICE_NAME}" -A 1 -b
+		    udhcpc -i wlan0 -A 1 -b -x hostname:${STA_DEVICE_NAME}
+	    else
+		    #udhcpc -i wlan0 -h 'XiaoYi SportCam 2' -A 1 -b
+		    udhcpc -i wlan0 -A 1 -b -x hostname:'XiaoYi SportCam 2'
+	    fi
+	fi
 	wait_ip_done
 }
 
