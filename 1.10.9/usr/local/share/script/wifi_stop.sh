@@ -117,3 +117,9 @@ fi
 if [ -e /tmp/fuse_d/events ]; then
     /sbin/start-stop-daemon -K -p /var/run/eventsCB.pid
 fi
+
+#stop ethenret over USB
+if [ "${ETHER_MODE}" == "yes" ]; then
+    /usr/local/share/script/usb_ether.sh stop
+fi
+

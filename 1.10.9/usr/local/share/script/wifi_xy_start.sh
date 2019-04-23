@@ -73,6 +73,16 @@ wait_wlan0 ()
 
 SYNC_CONFIG
 
+if [ "${ETHER_MODE}" == "yes" ]; then
+    echo "Start ethernet over USB"
+    /usr/local/share/script/usb_ether.sh start ${ETHER_IP}
+    if [ "${KEEP_WIFI}" == "no" ]; then
+        /usr/bin/SendToRTOS net_ready ${ETHER_IP}
+        echo "Wifi will not be started"
+       exit 0
+    fi
+fi
+
 if [ "${WIFI_SWITCH_GPIO}" != "" ]; then
     WIFI_SWITCH_VALUE=`/usr/local/share/script/t_gpio.sh ${WIFI_SWITCH_GPIO}`
     echo "GPIO ${WIFI_SWITCH_GPIO} = ${WIFI_SWITCH_VALUE}"
