@@ -12,6 +12,12 @@ export WIFI_CONFIGURE_PATH="/tmp/wifi.conf"
 
 SYNC_CONIG ()
 {
+    # FL0
+    if [ -e /tmp/FL0/wifi.conf ]; then
+        echo "Load wifi.conf from FL0 ..."
+        rm -rf ${WIFI_CONFIGURE_PATH}
+        cp -rf /tmp/FL0/wifi.conf ${WIFI_CONFIGURE_PATH}
+    fi
     # SDCard
     if [ -e /tmp/fuse_d/wifi.conf ]; then
         echo "Load wifi.conf from SDCard ..."
