@@ -81,6 +81,15 @@ wait_wlan0 ()
     done
 }
 
+events_manager ()
+{
+    if [ -e /tmp/fuse_d/events ]; then
+        sleep 2
+        echo "Starting events callback..."
+        /sbin/start-stop-daemon -S -b -p /var/run/eventsCB.pid -m -a /usr/local/share/script/cmdyi.py
+    fi
+}
+
 SYNC_CONFIG
 
 if [ "${ETHER_MODE}" == "yes" ]; then
@@ -89,7 +98,8 @@ if [ "${ETHER_MODE}" == "yes" ]; then
     if [ "${KEEP_WIFI}" == "no" ]; then
         /usr/bin/SendToRTOS net_ready ${ETHER_IP}
         echo "Wifi will not be started"
-       exit 0
+        events_manager
+        exit 0
     fi
 fi
 
@@ -145,8 +155,5 @@ else
     /usr/local/share/script/ap_xy_start.sh $@
 fi
 
-if [ -e /tmp/fuse_d/events ]; then
-    sleep 2
-    echo "Starting events callback..."
-    /sbin/start-stop-daemon -S -b -p /var/run/eventsCB.pid -m -a /usr/local/share/script/cmdyi.py
-fi
+events_manager
+
