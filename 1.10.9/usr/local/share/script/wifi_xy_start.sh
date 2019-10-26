@@ -38,6 +38,9 @@ SYNC_CONFIG ()
     if [ -e /tmp/fuse_d/wifi.conf ]; then
         echo "Load wifi.conf from SDCard ..."
         conf=`cat /tmp/fuse_d/wifi.conf | grep -Ev "^#"`
+        # Temporary IFS change to allow SSID and Password which contains space
+        tempIFS=$IFS
+	IFS=$'\n'
         for i in ${conf}
             do
                 sed -i 's/^'${i%=*}='.*$/'$i'/g' ${WIFI_CONFIGURE_PATH}
@@ -46,7 +49,7 @@ SYNC_CONFIG ()
     dos2unix -u  ${WIFI_CONFIGURE_PATH}
     conf=`cat ${WIFI_CONFIGURE_PATH} | grep -Ev "^#"`
     export `echo "${conf}"`
-
+    IFS=$tempIFS
 }
 
 wait_mmc_add ()
