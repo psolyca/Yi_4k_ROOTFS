@@ -11,7 +11,7 @@ if [ -e /tmp/fuse_d/AP.DEBUG/Wifi.sh ]; then
     /tmp/wifi.sh
 else
     echo "start Wi-Fi from system ..."
-    /usr/local/share/script/wifi_xy_start.sh "ap"
+    /usr/local/share/script/wifi_start.sh "ap"
 fi
 
 echo "restart Wi-Fi finished ..."

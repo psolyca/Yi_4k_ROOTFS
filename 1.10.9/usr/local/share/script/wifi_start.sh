@@ -153,9 +153,9 @@ fi
 
 echo "Found  WIFI interface!"
 if [ "${WIFI_MODE}" == "sta" ]; then
-    /usr/local/share/script/sta_xy_start.sh $@
+    /usr/local/share/script/sta_start.sh $@
 else
-    /usr/local/share/script/ap_xy_start.sh $@
+    /usr/local/share/script/ap_start.sh $@
 fi
 
 events_manager
