@@ -10,10 +10,6 @@ fi
 start()
 {
 	kernel_ver=$(uname -r)
-	SYS_USB_G_TYPE="serial"
-	SYS_USB_G_PARAMETER="use_acm=1"
-
-	echo host > /proc/ambarella/uport
 
 	#Install USB module
 	if [ -r /lib/modules/$kernel_ver/kernel/drivers/usb/usb-common.ko ]; then
@@ -24,6 +20,21 @@ start()
 	fi
 	if [ -r /lib/modules/$kernel_ver/kernel/drivers/usb/host/ehci-hcd.ko ]; then
 		modprobe ehci-hcd
+	fi
+	if [ -r /lib/modules/$kernel_ver/kernel/drivers/usb/host/ohci-hcd.ko ]; then
+		modprobe ohci-hcd
+	fi
+	if [ -r /lib/modules/$kernel_ver/kernel/drivers/usb/gadget/udc-core.ko ]; then
+		modprobe udc-core
+	fi
+	if [ -r /lib/modules/$kernel_ver/kernel/drivers/usb/gadget/ambarella_udc.ko ]; then
+		modprobe ambarella_udc
+	fi
+	if [ -r /lib/modules/$kernel_ver/kernel/fs/configfs/configfs.ko ]; then
+		modprobe configfs
+	fi
+	if [ -r /lib/modules/$kernel_ver/kernel/drivers/usb/gadget/libcomposite.ko ]; then
+		modprobe libcomposite
 	fi
 }
 
