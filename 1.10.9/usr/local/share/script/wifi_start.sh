@@ -104,6 +104,13 @@ events_manager ()
 
 SYNC_CONFIG
 
+if [ "${1}" == "rtmp" ]; then
+    # Force sta mode for the moment
+    WIFI_MODE="sta"
+    export ESSID=${RTMP_CONFIG_SSID}
+    export PASSWORD=${RTMP_CONFIG_PASS}
+fi
+
 if [ "${ETHER_MODE}" == "yes" ]; then
     /usr/local/share/script/usb_ether.sh start
     if [ "${KEEP_WIFI}" == "no" ]; then
