@@ -11,7 +11,7 @@ SYNC_CONFIG ()
     # If a wifi.conf exists on the SDCard, these values superseed the
     # default one.
 
-    # system (should already exists with wifi_configure.sh
+    # system (should already exists with wifi_configure.sh)
     if [ ! -e ${WIFI_CONFIGURE_PATH} ]; then
         echo "Load wifi.conf from system ..."
         cp -rf ${SCRIPT_PATH}/wifi.conf ${WIFI_CONFIGURE_PATH}
@@ -23,7 +23,9 @@ SYNC_CONFIG ()
         conf=`cat /tmp/FL0/wifi.conf | grep -Ev "^#"`
         for i in ${conf}
             do
-                sed -i 's/^'${i%=*}='.*$/'$i'/g' ${WIFI_CONFIGURE_PATH}
+                if [ ${i#*=} != "" ]; then
+                    sed -i 's/^'${i%=*}='.*$/'$i'/g' ${WIFI_CONFIGURE_PATH}
+                fi
         done
     fi
 
@@ -33,16 +35,18 @@ SYNC_CONFIG ()
         conf=`cat /tmp/fuse_d/wifi.conf | grep -Ev "^#"`
         # Temporary IFS change to allow SSID and Password which contains space
         tempIFS=$IFS
-	IFS=$'\n'
+        IFS=$'\n'
         for i in ${conf}
             do
-                sed -i 's/^'${i%=*}='.*$/'$i'/g' ${WIFI_CONFIGURE_PATH}
+                if [ ${i#*=} != "" ]; then
+                    sed -i 's/^'${i%=*}='.*$/'$i'/g' ${WIFI_CONFIGURE_PATH}
+                fi
         done
+        IFS=$tempIFS
     fi
     dos2unix -u  ${WIFI_CONFIGURE_PATH}
     conf=`cat ${WIFI_CONFIGURE_PATH} | grep -Ev "^#"`
     export `echo "${conf}"`
-    IFS=$tempIFS
 }
 
 wait_mmc_add ()
