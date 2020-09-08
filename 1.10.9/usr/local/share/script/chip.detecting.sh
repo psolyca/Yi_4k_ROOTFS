@@ -54,6 +54,7 @@ MMC_REMOVE ()
 
 CONFIG_DATA=`cat "${CONFIG_PATH}" | grep -Ev "^#"`
 export `echo "${CONFIG_DATA}"|grep -v PASSW|grep -v SSID|grep -vI $'^\xEF\xBB\xBF'`
+export WIFI_EN_GPIO=124
 
 if [ -z "`ls /sys/bus/sdio/devices`" ]; then
     MMC_ADD

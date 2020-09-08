@@ -174,7 +174,7 @@ HCI0_BRINGUP ()
 			else
 				wifi_conf=`cat /pref/wifi.conf | grep -Ev "^#"`
 			fi
-			WIFI_EN_GPIO=`echo "${wifi_conf}" | grep WIFI_EN_GPIO | cut -c 14-`
+			WIFI_EN_GPIO=124
 			WIFI_SWITCH_GPIO=`echo "${wifi_conf}" | grep WIFI_SWITCH_GPIO | cut -c 18-`
 
 			if [ "${wifi_start}" == "" ] && [ "${WIFI_SWITCH_GPIO}" == "" ] && [ "${WIFI_EN_GPIO}" != "" ]; then

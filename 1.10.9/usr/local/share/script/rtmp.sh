@@ -3,7 +3,7 @@
 export WIFI_CONFIG_PATH=/usr/local/share/script
 export RTMP_CONFIG_FILE=/tmp/rtmp_info.conf
 export WIFI_CONFIG_FILE=/usr/local/share/script/wifi.conf
-export RTMP_CONFIG_GPIO=`cat "${WIFI_CONFIG_FILE}" | grep -Ev "^#" | grep WIFI_EN_GPIO | cut -c 14-`
+export RTMP_CONFIG_GPIO=124
 export RTMP_STATUS_FLAG=1
 export RTMP_IPADDR_FLAG=
 export RTMP_DOSCAN_FLAG=yes

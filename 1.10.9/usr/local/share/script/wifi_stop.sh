@@ -103,7 +103,7 @@ if [ "${1}" != "nounload" ]; then
 	/usr/local/share/script/unload.sh
 fi
 CONFIGURE_PATH="/tmp/wifi.conf"
-WIFI_EN_GPIO=`cat ${CONFIGURE_PATH}  | grep -Ev "^#" | grep WIFI_EN_GPIO | cut -c 14-`
+WIFI_EN_GPIO=124
 if [ "${WIFI_EN_GPIO}" != "" ]; then
 	wait_mmc_remove
 fi

@@ -3,11 +3,13 @@
 export SCRIPT_PATH=/usr/local/share/script
 export WIFI_CONFIGURE_PATH="/tmp/wifi.conf"
 
+WIFI_EN_GPIO=124
+
 SYNC_CONFIG ()
 {
     # Use the default configuration file for values which are set
     # by the menu or do not need to be changed
-    # WIFI_MODE, WIFI_EN_GPIO, AP_COUNTRY, AP_CHANNEL_5G and WIFI_MAC
+    # WIFI_MODE, AP_COUNTRY, AP_CHANNEL_5G and WIFI_MAC
     # If a wifi.conf exists on the SDCard, these values superseed the
     # default one.
 
@@ -49,7 +51,7 @@ SYNC_CONFIG ()
     export `echo "${conf}"`
 }
 
-wait_mmc_add ()
+enable_wifi ()
 {
     ${SCRIPT_PATH}/t_gpio.sh ${WIFI_EN_GPIO} 0
     ${SCRIPT_PATH}/t_gpio.sh ${WIFI_EN_GPIO} 1
@@ -113,9 +115,9 @@ if [ "${ETHER_MODE}" == "yes" ]; then
 fi
 
 if [ -z "`ls /sys/bus/sdio/devices`" ]; then
-    wait_mmc_add
+    enable_wifi
     if [ $? -ne 0 ]; then
-        echo "MMC devices have not been created"
+        echo "WiFi could not be enable"
         exit 1
     fi
 fi
