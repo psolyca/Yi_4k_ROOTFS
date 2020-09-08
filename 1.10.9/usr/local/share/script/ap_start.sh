@@ -1,5 +1,7 @@
 #!/bin/sh
 
+CHIP_TYPE=43340
+
 if [ "${1}" != "" ]; then
     usecache=${1}
 fi

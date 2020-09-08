@@ -1,5 +1,7 @@
 #!/bin/sh
 
+CHIP_TYPE=43340
+
 if [ ! -e /tmp/wifi.preloaded ]; then
     /usr/local/share/script/preload.sh
 fi

@@ -26,7 +26,7 @@ if [ ! -e ${RTMP_CONFIG_FILE} ]; then
     exit 0
 fi
 
-export CHIP_TYPE=${2}
+export CHIP_TYPE=43340
 export WIFI_MAC=${3}
 export AP_COUNTRY=${4}
 export RTMP_CONFIG_NAME=${5}
