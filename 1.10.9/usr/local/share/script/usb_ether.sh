@@ -1,6 +1,7 @@
 #!/bin/sh
 
-ether_ip="$2"
+kernel_ver=$(uname -r)
+ETHER_IP=`cat /tmp/wifi.conf | grep "ETHER_IP" | cut -c 10-`
 
 start()
 {
@@ -12,9 +13,9 @@ start()
     modprobe ambarella_udc
     modprobe libcomposite
     modprobe g_ether
-    ifconfig usb0 $ether_ip up
+    ifconfig usb0 $ETHER_IP up
 
-    echo "\"ifconfig usb0 $ether_ip\" after host detects usb ethernet device."
+    echo "\"ifconfig usb0 $ETHER_IP\" after host detects usb ethernet device."
 }
 
 stop()
@@ -25,9 +26,11 @@ stop()
 
 case "$1" in
     start)
+        echo "Start ethernet over USB"
         start
         ;;
     stop)
+        echo "Stop ethernet over USB"
         stop
         ;;
     *)
