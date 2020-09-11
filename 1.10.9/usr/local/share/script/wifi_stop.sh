@@ -40,7 +40,7 @@ disable_wifi
 /usr/bin/SendToRTOS net_off
 
 #stop cmdyi
-if [ -e /tmp/fuse_d/events ]; then
+if [ -e /tmp/SD0/events ]; then
     /sbin/start-stop-daemon -K -p /var/run/eventsCB.pid
 fi
 

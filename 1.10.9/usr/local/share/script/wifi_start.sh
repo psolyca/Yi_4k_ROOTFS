@@ -32,9 +32,9 @@ SYNC_CONFIG ()
     fi
 
     # SDCard
-    if [ -e /tmp/fuse_d/wifi.conf ]; then
+    if [ -e /tmp/SD0/wifi.conf ]; then
         echo "Load wifi.conf from SDCard ..."
-        conf=`cat /tmp/fuse_d/wifi.conf | grep -Ev "^#"`
+        conf=`cat /tmp/SD0/wifi.conf | grep -Ev "^#"`
         # Temporary IFS change to allow SSID and Password which contains space
         tempIFS=$IFS
         IFS=$'\n'
@@ -95,7 +95,7 @@ wait_wlan0 ()
 
 events_manager ()
 {
-    if [ -e /tmp/fuse_d/events ]; then
+    if [ -e /tmp/SD0/events ]; then
         sleep 2
         echo "Starting events callback..."
         /sbin/start-stop-daemon -S -b -p /var/run/eventsCB.pid -m -a ${SCRIPT_PATH}/cmdyi.py

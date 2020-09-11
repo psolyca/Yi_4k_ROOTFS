@@ -74,3 +74,10 @@ mount -t debugfs none /sys/kernel/debug/
 
 #login telnet by 'default'
 #telnetd
+
+# Wait for SD0 to be mounted
+fWaiting=0
+while [ `mount | grep SD0` -ne 0 ] && [ "${fWaiting}" -le 10 ]; do
+    fWaiting=$(($fWaiting + 1))
+    sleep 1
+done
