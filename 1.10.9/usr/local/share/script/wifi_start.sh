@@ -105,10 +105,15 @@ events_manager ()
 SYNC_CONFIG
 
 if [ "${1}" == "rtmp" ]; then
-    # Force sta mode for the moment
-    WIFI_MODE="sta"
-    export ESSID=${RTMP_CONFIG_SSID}
-    export PASSWORD=${RTMP_CONFIG_PASS}
+    WIFI_MODE=${2}
+    export WIFI_MAC=${3}
+    export AP_COUNTRY=${4}
+    if [ -n ${5} ]; then
+        export ESSID=${5}
+        export PASSWORD=${6}
+        export AP_SSID=${5}
+        export AP_PASSWD=${6}
+    fi
 fi
 
 if [ "${ETHER_MODE}" == "yes" ]; then
