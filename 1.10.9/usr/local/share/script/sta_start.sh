@@ -270,7 +270,9 @@ WPA_GO ()
 }
 
 # Already configured, fire the connection
-if [ "${1}" != "" ] && [ -e ${STATION_CONFIG_CWPA} ]; then
+oSSID=`cat ${STATION_CONFIG_CWPA} | grep 'ssid' | grep -v 'bssid' | grep -v 'scan_ssid' | cut -c 6-`
+if [ "${1}" != "" ] && [ -e ${STATION_CONFIG_CWPA} ] && [ ${oSSID} == ${ESSID} ]; then
+	ifconfig wlan0 up
 	WPA_GO
 	exit 0
 fi
