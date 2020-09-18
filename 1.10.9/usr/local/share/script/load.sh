@@ -19,12 +19,6 @@ P_NVRAM="nvram_path=/usr/local/${BCM}/nv"
 P_NVRAM_SD="nvram_path=/tmp/nvram.txt"
 P_IF="iface_name=wlan"
 P_DBG="dhd_msg_level=0x01"
-conf=`cat /tmp/wifi.conf | grep -Ev "^#"`
-export mac=`echo "${conf}" | grep WIFI_MAC | cut -c 10-`
-
-if [ -e $LOG_ENABLE_SCRIPT  ]; then
-    echo "$conf" >> $LOG_OUT_FILE
-fi
 
 load_mod()
 {
