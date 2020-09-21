@@ -118,7 +118,7 @@ fi
 
 if [ "${ETHER_MODE}" == "yes" ]; then
     /usr/local/share/script/usb_ether.sh start
-    if [ "${KEEP_WIFI}" == "no" ]; then
+    if [ "${ETHER_KEEP_WIFI}" == "no" ]; then
         /usr/bin/SendToRTOS net_ready ${ETHER_IP}
         echo "Wifi will not be started"
         events_manager

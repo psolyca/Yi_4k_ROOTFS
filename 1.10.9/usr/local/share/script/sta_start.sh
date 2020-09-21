@@ -80,16 +80,16 @@ wait_ip_done ()
 	done
 
 	if [ "${fDATA}" != "" ]; then
-		echo "Connect ip done"
+		echo "Connect ip done for wlan0"
 		#send net status update message (Network ready, STA mode)
 		/usr/bin/SendToRTOS net_ready ${ESSID}
 	else
 		fDATA=`/bin/dmesg | grep DEAUTH_IND`
 		if [ "${fDATA}" != "" ]; then
-			echo "Connect ip error"
+			echo "Connect ip error for wlan0"
 			/usr/bin/SendToRTOS rtmp 129
 		else
-			echo "Connect ip fail"
+			echo "Connect ip fail for wlan0"
 			/usr/bin/SendToRTOS rtmp 130
 		fi
 	fi

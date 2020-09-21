@@ -86,9 +86,9 @@ apply_ap_conf()
     done
 
     if [ "${mobile}" == "1" ]; then
-        dnsmasq -5 -K --log-queries --dhcp-range=$DHCP_IP_START,$DHCP_IP_END,infinite
+        dnsmasq -i wlan0 -5 -K --log-queries --dhcp-range=$DHCP_IP_START,$DHCP_IP_END,infinite
     else
-        dnsmasq --nodns -5 -K -R -n --dhcp-range=$DHCP_IP_START,$DHCP_IP_END,infinite
+        dnsmasq -i wlan0 --nodns -5 -K -R -n --dhcp-range=$DHCP_IP_START,$DHCP_IP_END,infinite
     fi
 
     wpa_supplicant_conf
