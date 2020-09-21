@@ -14,15 +14,7 @@ start()
 	echo device > /proc/ambarella/uport
 
 	# Install USB module
-	if [ -r /lib/modules/$kernel_ver/kernel/drivers/usb/gadget/udc-core.ko ]; then
-		modprobe udc-core
-	fi
-	if [ -r /lib/modules/$kernel_ver/kernel/drivers/usb/gadget/ambarella_udc.ko ]; then
-		modprobe ambarella_udc
-	fi
-	if [ -r /lib/modules/$kernel_ver/kernel/drivers/usb/gadget/libcomposite.ko ]; then
-		modprobe libcomposite
-	fi
+	/usr/local/share/script/insert_usb_module.sh start
 
 	# Create and format a temp device for USB MSG.
 	dd if=/dev/zero of=/tmp/usb bs=1M count=10M

@@ -1,11 +1,11 @@
 #!/bin/sh
-STA_IP=""
-if [ -e /tmp/FL0/wifi.conf ]; then
-    STA_IP=`cat /tmp/FL0/wifi.conf | grep -Ev "^#" | grep STA_IP | cut -c 8-`
-fi
-if [ -e /tmp/fuse_d/wifi.conf ]; then
-    STA_IP=`cat /tmp/fuse_d/wifi.conf | grep -Ev "^#" | grep STA_IP | cut -c 8-`
-fi
+
+CONFIG_CDEV=nl80211
+STATION_CONFIG_AUTO=/tmp/wpa_scan.conf
+STATION_CONFIG_CRUN=/var/run/wpa_supplicant
+STATION_CONFIG_CWPA=/tmp/wpa_supplicant.conf
+STATION_CONFIG_DATA=/tmp/station.scan
+STATION_CONFIG_FIND=/tmp/station.find
 
 check_country_setting_channel()
 {
@@ -25,7 +25,7 @@ check_country_setting_channel()
 		;;
 		CZ)
 		wl country CZ
-        ;;
+		;;
 		US)
 		wl country US
 		;;
@@ -58,7 +58,7 @@ check_country_setting_channel()
 		;;
 		BR)
 		wl country BR
-        ;;
+		;;
 		TH)
 		wl country TH
 		;;
@@ -67,238 +67,223 @@ check_country_setting_channel()
 		;;
 	esac
 }
-if [ -e /sys/module/ar6000 ]; then
-	driver=wext
-elif [ -e /sys/module/dhd ]; then
-	driver=wext
-	wl ap 0
-	wl mpc 0
-	wl frameburst 1
-	wl up
-else
-	driver=nl80211
-fi
 
 wait_ip_done ()
 {
-	n=0
-	wlan0_ready=`ifconfig wlan0|grep "inet addr"`
-	while [ "${wlan0_ready}" == "" ] && [ $n -ne 10 ]; do
-		wlan0_ready=`ifconfig wlan0|grep "inet addr"`
-		n=$(($n + 1))
+	local fWaiting=0
+	local fDATA=""
+	while [ "${fDATA}" == "" ] && [ $fWaiting -le 10 ]; do
+		fDATA=`ifconfig wlan0|grep "inet addr"`
+		echo "Connect ip wait ${fWaiting}"
+		fWaiting=$(($fWaiting + 1))
 		sleep 1
 	done
 
-	if [ "${wlan0_ready}" != "" ]; then
+	if [ "${fDATA}" != "" ]; then
+		echo "Connect ip done for wlan0"
 		#send net status update message (Network ready, STA mode)
-		if [ -x /usr/bin/SendToRTOS ]; then
-			/usr/bin/SendToRTOS net_ready ${ESSID}
-		elif [ -x /usr/bin/boot_done ]; then
-			boot_done 1 2 1
+		/usr/bin/SendToRTOS net_ready ${STA_SSID}
+	else
+		fDATA=`/bin/dmesg | grep DEAUTH_IND`
+		if [ "${fDATA}" != "" ]; then
+			echo "Connect ip error for wlan0"
+			/usr/bin/SendToRTOS rtmp 129
+		else
+			echo "Connect ip fail for wlan0"
+			/usr/bin/SendToRTOS rtmp 130
 		fi
-	else
-		echo "Cannot get IP within 10 sec, skip boot_done"
 	fi
 }
-checkfuse=`cat /proc/mounts | grep /tmp/fuse_d`
-if [ "${checkfuse}" == "" ]; then
-	fuse_d="/tmp/SD0"
-else
-	fuse_d="/tmp/fuse_d"
-fi
 
-if [ "${1}" != "" ] && [ -e /tmp/wpa_supplicant.conf ]; then
-	cat /tmp/wpa_supplicant.conf
-	wpa_supplicant -D${driver} -iwlan0 -c/tmp/wpa_supplicant.conf -B
-	if [ "$STA_IP" != "" ]; then
-		ifconfig wlan0 $STA_IP netmask 255.255.255.0
-	else
-	    if [ "$STA_DEVICE_NAME" != " " ]; then
-	        #udhcpc -i wlan0 -h "${STA_DEVICE_NAME}" -A 1 -b
-	        udhcpc -i wlan0 -A 1 -b -x hostname:${STA_DEVICE_NAME}
-	    else
-	        #udhcpc -i wlan0 -h 'XiaoYi SportCam 2' -A 1 -b
-	        udhcpc -i wlan0 -A 1 -b -x hostname:'XiaoYi SportCam 2'
-	    fi
-	fi
-	wait_ip_done
-	exit 0
-fi
-REMASK=0
-FORCE_RESCAN_TIMES=8
-wpa_def_scan()
-{
-	if [ -e /sys/module/bcmdhd ]; then
-		echo "p2p_disabled=1" > /tmp/wpa_scan.conf
-		wpa_supplicant -D${driver} -iwlan0 -C /var/run/wpa_supplicant -B -c /tmp/wpa_scan.conf
-	else
-		wpa_supplicant -D${driver} -iwlan0 -C /var/run/wpa_supplicant -B
-	fi
-	wpa_cli scan
-	echo "start 10 seconds scan for ${ESSID}"
-	sleep 3
-	scan_result=`wpa_cli scan_r`
-	scan_entry=`echo "${scan_result}" | tr '\t' ' ' | grep " ${ESSID}$" | tail -n 1`
-	echo "${scan_result}"
-	n=1
-	while [ "${scan_entry}" == "" ] && [ $n -ne 8 ]; do
-		echo; sleep 1
-		n=$(($n + 1))
-		scan_result=`wpa_cli scan_r`
-		echo "${scan_result}"
-		scan_entry=`echo "${scan_result}" | tr '\t' ' ' | grep " ${ESSID}$" | tail -n 1`
-	done
-}
-wpa_auto_scan()
-{
-	echo "p2p_disabled=1" > /tmp/wpa_scan.conf
-	wpa_supplicant -D${driver} -iwlan0 -C /var/run/wpa_supplicant -B -c /tmp/wpa_scan.conf
-	wpa_cli scan
-	rm /tmp/wpa_scan.conf
-	sleep 6
-	n=`cat /pref/wifi_sta_list.conf | wc -l`
-	name=`sed -n '1p' /pref/wifi_sta_list.conf`
-	scan_retry=1
-	wpa_cli scan_r > /tmp/tmp.scan
-	sleep 0.1
-	scan_result=`cat /tmp/tmp.scan | grep -Ev "^#"`
-	#echo "${scan_result}"
-	j=1
-	rssitmp=-90
-	while [ "$scan_retry" -le "$n" ]; do
-		ESSIDTMP=`echo "${name}" | cut -f 1`
-		PASSWORDTMP=`echo "${name}" | cut -f 2`
-		REMASKTMP=`echo "${name}" | cut -f 3`
-		scan_entry_tmp=`echo "${scan_result}" | tr '\t' ' ' | grep -w " ${ESSIDTMP}$" | tail -n 1`
-		#echo "${scan_result}"
-		if [ "${scan_entry_tmp}" != "" ]; then
-			rssi=`echo "${scan_result}"  | grep -w "${ESSIDTMP}" | cut -f 3`
-			echo "rssi ====>> $rssi"
-			if [ "$rssi" -ge "$rssitmp" ]; then
-				ESSID=$ESSIDTMP
-				PASSWORD=$PASSWORDTMP
-				REMASK=$REMASKTMP
-				rssitmp=$rssi
-				scan_entry=$scan_entry_tmp
-			fi
-		fi
-		j=$(($j + 1))
-		p="p"
-		scan_retry=$(($scan_retry + 1))
-		name=`sed -n "$j$p" /pref/wifi_sta_list.conf`
-	done
-	rm /tmp/tmp.scan
-
-	echo "AUTO SCAN >> ESSID = ${ESSID}   PASSWORD = ${PASSWORD}   REMASK = ${REMASK}   rssitmp = ${rssitmp}"
-}
 WPA_SCAN ()
 {
-	if [ -e /pref/wifi_sta_list.conf ]; then
-		wpa_auto_scan
-	else
-		wpa_def_scan
+	local fDONE=""
+
+	while [ "${fDONE}" != "OK" ]; do
+		fDONE=`wpa_cli -iwlan0 scan | awk '{print $1}'`
+		echo "Connect scan wait $((${1} * ${2}))"
+		sleep 1
+	done
+}
+
+WPA_SCAN_DUMP ()
+{
+	sleep ${1}
+	echo "Connect scan dump $((${1} * ${2}))"
+	wpa_cli -iwlan0 scan_r >> ${STATION_CONFIG_DATA}
+}
+
+WPA_SCAN_FIND ()
+{
+	local fSCAN=`cat ${STATION_CONFIG_DATA} | grep -Ev "^#"`
+	local fMATE=`echo "${fSCAN}" | tr '\t' ' ' | grep -w " ${STA_SSID}$"`
+	local fCMin=1
+	local fCMax=`echo "${fMATE}" | wc -l`
+	local fFMin=2400
+	local fFMax=6000
+	local fGOOD=""
+	local fRSSI=-90
+	local fTEMP=0
+
+	while [ ${fCMin} -le ${fCMax} ]; do
+		fITEM=`echo "${fMATE}" | sed -n "${fCMin}p"`
+		fFREQ=`echo "${fITEM}" | tr '\t' ' ' | cut -d ' ' -f 2`
+		fRSSI=`echo "${fITEM}" | tr '\t' ' ' | cut -d ' ' -f 3`
+		fCMin=$((${fCMin} + 1))
+		if [ "${fITEM}" == "" ] || [ "${fFREQ}" == "" ] || [ "${fRSSI}" == "" ]; then
+			continue
+		fi
+		if [ ${fFREQ} -ge ${fFMin} ] && [ ${fFREQ} -le ${fFMax} ]; then
+			if [ "${fGOOD}" != "" ]; then
+				fTEMP=`echo "${fGOOD}" | tr '\t' ' ' | cut -d ' ' -f 3`
+				if [ ${fTEMP} -lt ${fRSSI} ]; then
+					fGOOD=${fITEM}
+				fi
+			else
+				fGOOD=${fITEM}
+			fi
+		fi
+	done
+
+	if [ "${fGOOD}" != "" ]; then
+		echo "${fGOOD}" > ${STATION_CONFIG_FIND}
 	fi
+
+	echo "AUTO SCAN >> STA_SSID = ${STA_SSID}   STA_PASSWD = ${STA_PASSWD}   rssitmp = ${fRSSI}"
+}
+
+WPA_AUTO_SCAN()
+{
+
+	local fTick=5
+	local fCMin=0
+	local fCMax=$((60 / ${fTick}))
+
+	echo "p2p_disabled=1" > ${STATION_CONFIG_AUTO}
+	wpa_supplicant -D${CONFIG_CDEV} -iwlan0 -C ${STATION_CONFIG_CRUN} -B -c ${STATION_CONFIG_AUTO}
+
+	while [ ${fCMin} -lt ${fCMax} ]; do
+		if [ $((${fCMin} % 2)) -eq 0 ]; then
+			WPA_SCAN  ${fTick} ${fCMin}
+		fi
+
+		WPA_SCAN_DUMP ${fTick} ${fCMin}
+
+		WPA_SCAN_FIND
+
+		if [ -e ${STATION_CONFIG_FIND} ]; then
+			break
+		fi
+
+		fCMin=$((${fCMin} + 1))
+	done
+
+	if [ -e ${STATION_CONFIG_FIND} ]; then
+		echo "Connect scan done"
+		return 0
+	else
+		echo "Connect scan fail"
+		/usr/bin/SendToRTOS rtmp 128
+		echo -e "\033[031m failed to detect SSID ${STA_SSID}, force FAKE ESSID to be able to control the cam (manual stop). \033[0m"
+		/usr/bin/SendToRTOS net_ready "FAKE"
+		return 1
+	fi
+
+}
+
+WPA_CONFIG ()
+{
+	local fFIND=`sed -n "1p" ${STATION_CONFIG_FIND}`
+	local fSSID=""
+	local fPASS=""
+	local fEMAC=""
+	local fCWEP=""
+	local fCWPA="WPA"
+	local fWPA2="WPA2"
+	local fCCMP="CCMP"
+
+	rm -rf ${STATION_CONFIG_CWPA}
+
+	fSSID=${STA_SSID}
+	fPASS=${STA_PASSWD}
+	fEMAC=`echo "${fFIND}" | tr '\t' ' ' | cut -d ' ' -f 1`
+	fCWEP=`echo "${fFIND}" | grep WEP`
+	fCWPA=`echo "${fFIND}" | grep WPA`
+	fWPA2=`echo "${fFIND}" | grep WPA2`
+	fCCMP=`echo "${fFIND}" | grep CCMP`
+
+	echo -e "\033[031m ${fFIND} \033[0m"
+	echo "ctrl_interface=${STATION_CONFIG_CRUN}" > ${STATION_CONFIG_CWPA}
+	echo "network={" >> ${STATION_CONFIG_CWPA}
+	echo "ssid=\"${fSSID}\"" >> ${STATION_CONFIG_CWPA}
+	if [ "${fEMAC}" != "" ]; then
+		echo "bssid=${fEMAC}" >> ${STATION_CONFIG_CWPA}
+	fi
+	if [ "${STATION_CONFIG_SCAN}" == "yes" ]; then
+		echo "scan_ssid=1" >> ${STATION_CONFIG_CWPA}
+	else
+		echo "scan_ssid=0" >> ${STATION_CONFIG_CWPA}
+	fi
+
+	if [ "${fCWPA}" != "" ]; then
+		echo "key_mgmt=WPA-PSK" >> ${STATION_CONFIG_CWPA}
+		if [ "${fWPA2}" != "" ]; then
+			echo "proto=WPA2" >> ${STATION_CONFIG_CWPA}
+		else
+			echo "proto=WPA" >> ${STATION_CONFIG_CWPA}
+		fi
+		if [ "${fCCMP}" != "" ]; then
+			echo "pairwise=CCMP" >> ${STATION_CONFIG_CWPA}
+		else
+			echo "pairwise=TKIP" >> ${STATION_CONFIG_CWPA}
+		fi
+		echo "psk=\"${fPASS}\"" >> ${STATION_CONFIG_CWPA}
+	fi
+	if [ "${fCWEP}" != "" ] && [ "${fCWPA}" == "" ]; then
+		echo "key_mgmt=NONE" >> ${STATION_CONFIG_CWPA}
+		echo "wep_key0=${fPASS}" >> ${STATION_CONFIG_CWPA}
+		echo "wep_tx_keyidx=0" >> ${STATION_CONFIG_CWPA}
+	fi
+	if [ "${fCWEP}" == "" ] && [ "${fCWPA}" == "" ]; then
+		echo "key_mgmt=NONE" >> ${STATION_CONFIG_CWPA}
+	fi
+	echo "}" >> ${STATION_CONFIG_CWPA}
+
+	rm -f ${STATION_CONFIG_AUTO}
+	echo "p2p_disabled=1" >> ${STATION_CONFIG_CWPA}
 }
 
 WPA_GO ()
 {
 	killall -9 wpa_supplicant 2>/dev/null
-	wpa_supplicant -D${driver} -iwlan0 -c/tmp/wpa_supplicant.conf -B
+	wpa_supplicant -D${CONFIG_CDEV} -iwlan0 -c${STATION_CONFIG_CWPA} -B
 	if [ "$STA_IP" != "" ]; then
 		ifconfig wlan0 $STA_IP netmask 255.255.255.0
 	else
-	    if [ "$STA_DEVICE_NAME" != " " ]; then
-		    #udhcpc -i wlan0 -h "${STA_DEVICE_NAME}" -A 1 -b
-		    udhcpc -i wlan0 -A 1 -b -x hostname:${STA_DEVICE_NAME}
-	    else
-		    #udhcpc -i wlan0 -h 'XiaoYi SportCam 2' -A 1 -b
-		    udhcpc -i wlan0 -A 1 -b -x hostname:'XiaoYi SportCam 2'
-	    fi
+		if [ "$STA_DEVICE_NAME" != " " ]; then
+			udhcpc -i wlan0 -A 1 -b -x hostname:${STA_DEVICE_NAME}
+		else
+			udhcpc -i wlan0 -A 1 -b -x hostname:'XiaoYi SportCam 2'
+		fi
 	fi
 	wait_ip_done
 }
 
-ifconfig wlan0 up
-check_country_setting_channel
-WPA_SCAN
-killall wpa_supplicant
-if [ "${scan_entry}" == "" ]; then
-	scan_retry_count=0
-	while [ "${scan_entry}" == "" ] && [ $scan_retry_count -ne $FORCE_RESCAN_TIMES ]; do
-		echo "will retry for $FORCE_RESCAN_TIMES times, start re-scan $scan_retry_count"
-		WPA_SCAN
-		killall wpa_supplicant
-		scan_retry_count=$(($scan_retry_count + 1))
-	done
+# Already configured, fire the connection
+oSSID=`cat ${STATION_CONFIG_CWPA} | grep 'ssid' | grep -v 'bssid' | grep -v 'scan_ssid' | cut -c 6-`
+if [ "${1}" != "" ] && [ -e ${STATION_CONFIG_CWPA} ] && [ ${oSSID} == ${STA_SSID} ]; then
+	ifconfig wlan0 up
+	WPA_GO
+	exit 0
 fi
 
-if [ "${scan_entry}" == "" ]; then
-	echo -e "\033[031m failed to detect SSID ${ESSID}, force FAKE ESSID to be able to control the cam (manual stop). \033[0m"
-	if [ -x /usr/bin/SendToRTOS ]; then
-		/usr/bin/SendToRTOS net_ready "FAKE"
-	elif [ -x /usr/bin/boot_done ]; then
-		/usr/bin/boot_done 1 2 1
-	fi
+ifconfig wlan0 up
+check_country_setting_channel
+WPA_AUTO_SCAN
+if [ $? -ne 0 ]; then
 	exit 1
 fi
 
-echo -e "\033[031m ${scan_entry} \033[0m"
-echo "ctrl_interface=/var/run/wpa_supplicant" > /tmp/wpa_supplicant.conf
-echo "network={" >> /tmp/wpa_supplicant.conf
-echo "ssid=\"${ESSID}\"" >> /tmp/wpa_supplicant.conf
-echo "scan_ssid=1" >> /tmp/wpa_supplicant.conf
-WEP=`echo "${scan_entry}" | grep WEP`
-WPA=`echo "${scan_entry}" | grep WPA`
-WPA2=`echo "${scan_entry}" | grep WPA2`
-CCMP=`echo "${scan_entry}" | grep CCMP`
-TKIP=`echo "${scan_entry}" | grep TKIP`
-
-if [ "${WPA}" != "" ]; then
-	#WPA2-PSK-CCMP	(11n requirement)
-	#WPA-PSK-CCMP
-	#WPA2-PSK-TKIP
-	#WPA-PSK-TKIP
-	echo "key_mgmt=WPA-PSK" >> /tmp/wpa_supplicant.conf
-
-	if [ "${WPA2}" != "" ]; then
-		echo "proto=WPA2" >> /tmp/wpa_supplicant.conf
-	else
-		echo "proto=WPA" >> /tmp/wpa_supplicant.conf
-	fi
-
-	if [ "${CCMP}" != "" ]; then
-		echo "pairwise=CCMP" >> /tmp/wpa_supplicant.conf
-	else
-		echo "pairwise=TKIP" >> /tmp/wpa_supplicant.conf
-	fi
-
-	echo "psk=\"${PASSWORD}\"" >> /tmp/wpa_supplicant.conf
-fi
-
-if [ "${WEP}" != "" ] && [ "${WPA}" == "" ]; then
-	echo "key_mgmt=NONE" >> /tmp/wpa_supplicant.conf
-        echo "wep_key0=${PASSWORD}" >> /tmp/wpa_supplicant.conf
-        echo "wep_tx_keyidx=0" >> /tmp/wpa_supplicant.conf
-fi
-
-if [ "${WEP}" == "" ] && [ "${WPA}" == "" ]; then
-	echo "key_mgmt=NONE" >> /tmp/wpa_supplicant.conf
-fi
-
-echo "}" >> /tmp/wpa_supplicant.conf
-
-if [ -e /sys/module/bcmdhd ]; then
-	rm -f /tmp/wpa_scan.conf
-	echo "p2p_disabled=1" >> /tmp/wpa_supplicant.conf
-	if [ "`uname -r`" != "2.6.38.8" ]; then
-		echo "wowlan_triggers=any" >> /tmp/wpa_supplicant.conf
-	fi
-fi
-if [ -e /sys/module/8189es ] || [ -e /sys/module/8723bs ]; then
-	if [ "`uname -r`" != "2.6.38.8" ]; then
-		echo "wowlan_triggers=any" >> /tmp/wpa_supplicant.conf
-	fi
-fi
+WPA_CONFIG
 
 WPA_GO
-
