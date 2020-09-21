@@ -53,9 +53,6 @@ start()
         fi
         wait_ip_done
 
-        # Force restart of telnetd
-        ${SCRIPT_PATH}/start_telnet.sh
-
     fi
 }
 
