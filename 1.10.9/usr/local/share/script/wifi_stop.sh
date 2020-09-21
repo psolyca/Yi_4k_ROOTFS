@@ -27,10 +27,21 @@ if [ -e /sys/module/bcmdhd ]; then
 	ifconfig wlan0 down
 fi
 
-killall hostapd dnsmasq udhcpc wpa_supplicant wpa_cli wpa_event.sh 2> /dev/null
-echo "killall hostapd dnsmasq udhcpc wpa_supplicant wpa_cli wpa_event.sh"
+wlan_dns=`ps x | grep -v "grep" | grep -- "dnsmasq -i wlan" | tr -s " " | cut -d " " -f 2`
+if [ -n $wlan_dns ]; then
+	kill -9 $wlan_dns
+	echo "kill -9 dnsmasq for wlan0"
+fi
+wlan_dhcp=`ps x | grep -v "grep" | grep -- "udhcpc -i wlan" | tr -s " " | cut -d " " -f 2`
+if [ -n $wlan_dhcp ]; then
+	kill -9 $wlan_dhcp
+	echo "kill -9 udhcpc for wlan0"
+fi
+
+killall wpa_supplicant wpa_cli wpa_event.sh 2> /dev/null
+echo "killall wpa_supplicant wpa_cli wpa_event.sh"
 rm -f /tmp/DIRECT.ssid /tmp/DIRECT.passphrase /tmp/wpa_p2p_done /tmp/wpa_last_event
-killall hostapd dnsmasq udhcpc wpa_supplicant wpa_cli wpa_event.sh 2> /dev/null
+killall wpa_supplicant wpa_cli wpa_event.sh 2> /dev/null
 
 ${SCRIPT_PATH}/unload.sh
 

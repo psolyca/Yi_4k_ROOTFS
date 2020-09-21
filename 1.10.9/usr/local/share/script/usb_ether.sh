@@ -58,6 +58,16 @@ start()
 
 stop()
 {
+    usb_dns=`ps x | grep -v "grep" | grep -- "dnsmasq -i usb" | tr -s " " | cut -d " " -f 2`
+    if [ -n $usb_dns ]; then
+        kill -9 $usb_dns
+	    echo "kill -9 dnsmasq for usb0"
+    fi
+    usb_dhcp=`ps x | grep -v "grep" | grep -- "udhcpc -i usb" | tr -s " " | cut -d " " -f 2`
+    if [ -n $usb_dhcp ]; then
+        kill -9 $usb_dhcp
+	    echo "kill -9 udhcpc for usb0"
+    fi
     ifconfig usb0 down
     rmmod g_ether
 }
