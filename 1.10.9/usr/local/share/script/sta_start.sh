@@ -82,7 +82,7 @@ wait_ip_done ()
 	if [ "${fDATA}" != "" ]; then
 		echo "Connect ip done for wlan0"
 		#send net status update message (Network ready, STA mode)
-		/usr/bin/SendToRTOS net_ready ${ESSID}
+		/usr/bin/SendToRTOS net_ready ${STA_SSID}
 	else
 		fDATA=`/bin/dmesg | grep DEAUTH_IND`
 		if [ "${fDATA}" != "" ]; then
@@ -116,7 +116,7 @@ WPA_SCAN_DUMP ()
 WPA_SCAN_FIND ()
 {
 	local fSCAN=`cat ${STATION_CONFIG_DATA} | grep -Ev "^#"`
-	local fMATE=`echo "${fSCAN}" | tr '\t' ' ' | grep -w " ${ESSID}$"`
+	local fMATE=`echo "${fSCAN}" | tr '\t' ' ' | grep -w " ${STA_SSID}$"`
 	local fCMin=1
 	local fCMax=`echo "${fMATE}" | wc -l`
 	local fFMin=2400
@@ -149,7 +149,7 @@ WPA_SCAN_FIND ()
 		echo "${fGOOD}" > ${STATION_CONFIG_FIND}
 	fi
 
-	echo "AUTO SCAN >> ESSID = ${ESSID}   PASSWORD = ${PASSWORD}   rssitmp = ${fRSSI}"
+	echo "AUTO SCAN >> STA_SSID = ${STA_SSID}   STA_PASSWD = ${STA_PASSWD}   rssitmp = ${fRSSI}"
 }
 
 WPA_AUTO_SCAN()
@@ -184,7 +184,7 @@ WPA_AUTO_SCAN()
 	else
 		echo "Connect scan fail"
 		/usr/bin/SendToRTOS rtmp 128
-		echo -e "\033[031m failed to detect SSID ${ESSID}, force FAKE ESSID to be able to control the cam (manual stop). \033[0m"
+		echo -e "\033[031m failed to detect SSID ${STA_SSID}, force FAKE ESSID to be able to control the cam (manual stop). \033[0m"
 		/usr/bin/SendToRTOS net_ready "FAKE"
 		return 1
 	fi
@@ -204,8 +204,8 @@ WPA_CONFIG ()
 
 	rm -rf ${STATION_CONFIG_CWPA}
 
-	fSSID=${ESSID}
-	fPASS=${PASSWORD}
+	fSSID=${STA_SSID}
+	fPASS=${STA_PASSWD}
 	fEMAC=`echo "${fFIND}" | tr '\t' ' ' | cut -d ' ' -f 1`
 	fCWEP=`echo "${fFIND}" | grep WEP`
 	fCWPA=`echo "${fFIND}" | grep WPA`
@@ -271,7 +271,7 @@ WPA_GO ()
 
 # Already configured, fire the connection
 oSSID=`cat ${STATION_CONFIG_CWPA} | grep 'ssid' | grep -v 'bssid' | grep -v 'scan_ssid' | cut -c 6-`
-if [ "${1}" != "" ] && [ -e ${STATION_CONFIG_CWPA} ] && [ ${oSSID} == ${ESSID} ]; then
+if [ "${1}" != "" ] && [ -e ${STATION_CONFIG_CWPA} ] && [ ${oSSID} == ${STA_SSID} ]; then
 	ifconfig wlan0 up
 	WPA_GO
 	exit 0

@@ -109,8 +109,8 @@ if [ "${1}" == "rtmp" ]; then
     export WIFI_MAC=${3}
     export AP_COUNTRY=${4}
     if [ -n ${5} ]; then
-        export ESSID=${5}
-        export PASSWORD=${6}
+        export STA_SSID=${5}
+        export STA_PASSWD=${6}
         export AP_SSID=${5}
         export AP_PASSWD=${6}
     fi
