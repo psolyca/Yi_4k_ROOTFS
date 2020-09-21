@@ -147,4 +147,7 @@ else
     /usr/bin/SendToRTOS rtmp 7
 fi
 
+# Force restart of telnetd
+${SCRIPT_PATH}/start_telnet.sh
+
 exit 0
