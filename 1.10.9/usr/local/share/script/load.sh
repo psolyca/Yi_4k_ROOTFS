@@ -8,7 +8,6 @@ fi
 rm -f /tmp/wifi.preloaded
 
 LOG_ENABLE_SCRIPT="/tmp/SD0/save_log_enable.script"
-LOG_OUT_FILE="/tmp/SD0/load.log"
 
 KO=bcmdhd.ko
 # BCM will get name by configure.
@@ -28,13 +27,13 @@ load_mod()
 }
 
 if [ -e $LOG_ENABLE_SCRIPT  ]; then
-    echo "enter wifi firmware loading" >> $LOG_OUT_FILE
+    echo "enter wifi firmware loading"
 fi
 
 case $1 in
     sta)
         if [ -e $LOG_ENABLE_SCRIPT  ]; then
-            echo "loading sta" >> $LOG_OUT_FILE
+            echo "loading sta"
         fi
         load_mod op_mode=1
         ;;
@@ -44,7 +43,7 @@ case $1 in
     *)
         # Set as AP
         if [ -e $LOG_ENABLE_SCRIPT  ]; then
-            echo "loading ap" >> $LOG_OUT_FILE
+            echo "loading ap"
         fi
         load_mod op_mode=2
         ;;
