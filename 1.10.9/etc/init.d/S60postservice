@@ -31,4 +31,12 @@ if [ -x /usr/sbin/cherokee-worker ]; then
 	/usr/sbin/cherokee-worker -a -C /etc/cherokee.conf -j -s -d
 fi
 
+#Enable Cron
+if [ -x /usr/sbin/crond ]; then
+	if [ ! -e /var/spool/cron/crontabs ]; then
+		mkdir -p /var/spool/cron/crontabs
+	fi
+	/usr/sbin/crond
+fi
+
 exit $?

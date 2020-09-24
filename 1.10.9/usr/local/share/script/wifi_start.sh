@@ -147,6 +147,7 @@ fi
 
 echo "Found  WIFI interface!"
 if [ "${WIFI_MODE}" == "sta" ]; then
+    ${SCRIPT_PATH}/wifi_check.sh start
     ${SCRIPT_PATH}/sta_start.sh $@
 else
     ${SCRIPT_PATH}/ap_start.sh $@

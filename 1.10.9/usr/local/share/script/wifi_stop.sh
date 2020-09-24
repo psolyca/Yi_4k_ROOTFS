@@ -61,3 +61,4 @@ if [ "${ETHER_MODE}" == "yes"]; then
 	${SCRIPT_PATH}/usb_ether.sh stop
 fi
 
+${SCRIPT_PATH}/wifi_check.sh stop
