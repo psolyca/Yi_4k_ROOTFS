@@ -96,7 +96,7 @@ if [ -n "$rootfs" ]; then
 	exe eval sudo mkdir -p run/dbus tmp/dbus
 	exe eval sudo mkdir -p usr/{lib/{gio/modules,python2.7/config},lib32/{gio/modules,python2.7/config}}
 	exe eval sudo mkdir -p usr/share/{dbus-1/{services,system-services},locale,udhcpc/default.script.d}
-	exe eval sudo mkdir -p var/{cache/dbus,lib/{misc/dbus,pcmcia/dbus},lock/dbus,log/dbus,pcmcia/dbus,run/dbus,spool/dbus,tmp/dbus}
+	exe eval sudo mkdir -p var/{cache/dbus,lib/{misc/dbus,pcmcia/dbus},lock/dbus,log/dbus,pcmcia/dbus,run/dbus,spool/{dbus,cron/crontabs},tmp/dbus}
 	exe eval sudo mkdir -p var/www/{DCIM,live,mjpeg,pref,shutter}
 	popd > /dev/null
 	printf "$blue Copying files from submodules\n"
