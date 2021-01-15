@@ -1,0 +1,7 @@
+#!/bin/sh
+
+if [ -d /tmp/SD0/ssh ]; then
+  mount --bind /tmp/SD0/ssh /root/.ssh
+fi
+
+dropbear -B
