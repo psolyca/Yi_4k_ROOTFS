@@ -2,6 +2,7 @@
 
 export SCRIPT_PATH=/usr/local/share/script
 export WIFI_CONFIGURE_PATH="/tmp/wifi.conf"
+export WIFI_TMP_CONF_PATH="/tmp/wifi.tmp.conf"
 
 WIFI_EN_GPIO=124
 
@@ -13,6 +14,8 @@ SYNC_CONFIG ()
     # If a wifi.conf exists on the SDCard, these values superseed the
     # default one.
 
+    local WIFI_TMP=0
+
     # system (should already exists with wifi_configure.sh)
     if [ ! -e ${WIFI_CONFIGURE_PATH} ]; then
         echo "Load wifi.conf from system ..."
@@ -22,31 +25,33 @@ SYNC_CONFIG ()
     # FL0
     if [ -e /tmp/FL0/wifi.conf ]; then
         echo "Load wifi.conf from FL0 ..."
-        conf=`cat /tmp/FL0/wifi.conf | grep -Ev "^#"`
-        for i in ${conf}
-            do
-                if [ ${i#*=} != "" ]; then
-                    sed -i 's/^'${i%=*}='.*$/'$i'/g' ${WIFI_CONFIGURE_PATH}
-                fi
-        done
+        cp -rf /tmp/FL0/wifi.conf ${WIFI_TMP_CONF_PATH}
+        WIFI_TMP=1
     fi
 
     # SDCard
     if [ -e /tmp/SD0/wifi.conf ]; then
         echo "Load wifi.conf from SDCard ..."
-        conf=`cat /tmp/SD0/wifi.conf | grep -Ev "^#"`
+        cp -rf /tmp/SD0/wifi.conf ${WIFI_TMP_CONF_PATH}
+        WIFI_TMP=1
+    fi
+
+    if [ $WIFI_TMP -eq 1 ]; then
+        echo "Convert wifi.conf to Unix"
+        dos2unix -u ${WIFI_TMP_CONF_PATH}
+        conf=`cat ${WIFI_TMP_CONF_PATH} | grep -Ev "^#"`
         # Temporary IFS change to allow SSID and Password which contains space
         tempIFS=$IFS
         IFS=$'\n'
-        for i in ${conf}
-            do
-                if [ ${i#*=} != "" ]; then
-                    sed -i 's/^'${i%=*}='.*$/'$i'/g' ${WIFI_CONFIGURE_PATH}
-                fi
+        for i in ${conf}; do
+            if [ ${i#*=} != "" ]; then
+                sed -i 's/^'${i%=*}='.*$/'$i'/g' ${WIFI_CONFIGURE_PATH}
+            fi
         done
         IFS=$tempIFS
+        rm ${WIFI_TMP_CONF_PATH}
     fi
-    dos2unix -u  ${WIFI_CONFIGURE_PATH}
+
     conf=`cat ${WIFI_CONFIGURE_PATH} | grep -Ev "^#"`
     export `echo "${conf}"`
 }
