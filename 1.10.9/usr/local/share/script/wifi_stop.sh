@@ -28,12 +28,12 @@ if [ -e /sys/module/bcmdhd ]; then
 fi
 
 wlan_dns=`ps x | grep -v "grep" | grep -- "dnsmasq -i wlan" | tr -s " " | cut -d " " -f 2`
-if [ -n $wlan_dns ]; then
+if [ $wlan_dns ]; then
 	kill -9 $wlan_dns
 	echo "kill -9 dnsmasq for wlan0"
 fi
 wlan_dhcp=`ps x | grep -v "grep" | grep -- "udhcpc -i wlan" | tr -s " " | cut -d " " -f 2`
-if [ -n $wlan_dhcp ]; then
+if [ $wlan_dhcp ]; then
 	kill -9 $wlan_dhcp
 	echo "kill -9 udhcpc for wlan0"
 fi
