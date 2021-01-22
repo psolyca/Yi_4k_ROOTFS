@@ -57,7 +57,8 @@ fi
 
 #stop ethernet over USB
 ETHER_MODE=`cat /tmp/wifi.conf | grep "ETHER_MODE" | cut -c 12-`
-if [ "${ETHER_MODE}" == "yes"]; then
+ETHER_KEEP=`cat /tmp/wifi.conf | grep "ETHER_KEEP" | cut -c 12-`
+if [ "${ETHER_MODE}" == "yes" -a "${ETHER_KEEP}" == "no" ]; then
 	${SCRIPT_PATH}/usb_ether.sh stop
 fi
 
