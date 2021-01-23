@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if [ -e /tmp/SD0/wifidelfl0 ]; then
+    rm /tmp/FL0/wifi.conf
+fi
+
+if [ -e /tmp/SD0/wifitofl0 ]; then
+    cp /tmp/SD0/wifi.conf /tmp/FL0/
+    rm /tmp/SD0/wifi.conf
+fi
