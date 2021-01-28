@@ -13,6 +13,7 @@ if [ $# -eq 0]; then
 fi
 
 echo -e "\n\n\n=================================================================" | tee -a $WIFI_LOG_FILE
+echo Firmware version: [sed] | tee -a $WIFI_LOG_FILE
 echo Call_Time:  `date` | tee -a $WIFI_LOG_FILE
 echo Call_Script:  $@ | tee -a $WIFI_LOG_FILE
 echo -e "=================================================================" | tee -a $WIFI_LOG_FILE

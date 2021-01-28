@@ -27,23 +27,23 @@ exe() { echo -e "$yellow \$ ${@/eval/} $normal" ; "$@" ; }
 
 function usage()
 {
-	printf "Usage: $0 -r folder -s file [-f firmware] [-o oldversion -n newversion]\n"
-	printf "\t-r folder to squash\n"
-	printf "\t-s name of the squashed file\n"
-	printf "\t   if this file should be integrated in a firmware (-f),\n"
-	printf "\t   give the path of the original file, could be _part_rfs.a9s.\n"
-	printf "\t-f name of the firmware\n"
+	printf "Usage: $0 -r folder -s file [-f firmware] [-o oldversion -n newversion] [-l strversion]\n"
+	printf "\t-r folder to squash, usually 1.10.9\n"
+	printf "\t-s name and path of the original squashed file, usually _part_rfs.a9s\n"
+	printf "\t   if you are building a firmware with -f,\n"
+	printf "\t   point to the path of the unpacked firmware with all *.a9s files.\n"
+	printf "\t-f name of the custom firmware\n"
 	printf "\t   if a name is given here, the firmware will also be built.\n"
 	printf "\t   This option need also all parts of the firmware in the same place.\n"
-	printf "\t   By default, the path to reach those parts will be the same as the squashed file path.\n"
+	printf "\t   By default, the path to reach those parts will be the same as the squashed file path (-s).\n"
 	printf "\t   To be able to build the firmware, python3 is needed.\n"
-	printf "\t-o version of the firmware\n"
-	printf "\t   if a custom number should be insert, the current number should be given.\n"
-	printf "\t   This option should be use in conjonction of the -n option.\n"
+	printf "\t-o version of the original firmware, usually 1.10.9.\n"
+	printf "\t   This option must be used in conjonction of the -n option.\n"
 	printf "\t-n version of the custom firmware.\n"
+	printf "\t-l string added to -n for logging purpose.\n"
 }
 
-while getopts "r:s:f:o:n:" opt; do
+while getopts "r:s:f:o:n:l:" opt; do
 	case "$opt" in
 		h|help)
 			usage
@@ -59,11 +59,14 @@ while getopts "r:s:f:o:n:" opt; do
 			fwfile=$OPTARG
 			;;
 		o)
-				oldversion=$OPTARG
-				;;
+			oldversion=$OPTARG
+			;;
 		n)
-				newversion=$OPTARG
-				;;
+			newversion=$OPTARG
+			;;
+		l)
+			strversion=$OPTARG
+			;;
 		*)
 			usage
 			exit 0
@@ -107,6 +110,10 @@ if [ -n "$rootfs" ]; then
 	exe eval sudo cp cmdYi/src/Yi4kAPI/yiAPIListener.py $rootfs/usr/lib/python2.7/site-packages/Yi4kAPI/
 	exe eval sudo cp cmdYi/src/cmdyi.py $rootfs/usr/local/share/script/
 	exe eval sudo chmod +x $rootfs/usr/local/share/script/cmdyi.py
+	if [[ -n "$strversion" ]]; then
+		printf "$blue Added $newversion-$strversion to save_wifi_log.sh\n"
+		exe eval sudo sed -i "s/\\\[sed\\\]/\\\[$newversion-$strversion\\\]/g" $rootfs/usr/local/share/script/save_wifi_log.sh
+	fi
 	if [ -z "$sqhfile" ]; then
 		printf "$red Squashing with a default name _part_rfs.a9s in current path.\n"
 		printf "Building the firmware will not be allowed.$normal\n"
@@ -126,6 +133,8 @@ if [ -n "$rootfs" ]; then
 	printf "$blue To not mess with git, all submodules files are deleted from rootfs\n"
 	exe eval sudo rm -fr $rootfs/usr/lib/python2.7/site-packages/Yi4kAPI
 	exe eval sudo rm $rootfs/usr/local/share/script/cmdyi.py
+	printf "$blue Hard resetting to HEAD.\n"
+	exe eval sudo git reset --hard HEAD
 else
 	printf "$red No folder to squash.$normal\n"
 fi
@@ -148,11 +157,11 @@ if [ -n "$fwfile" ] && [ $fwbuild -eq 1 ]; then
 			fwpath=$(dirname "$fwpartpath")
 			if [[ -n $oldversion ]]; then
 				if [[ -n $newversion ]]; then
-				printf "$blue Custom firmware from version $oldversion to $newversion.$normal\n"
-				exe eval cp $fwpartpath/_part_lrtos.a9s $fwpartpath/_part_lrtos.bak
-				offset=$((`strings -t d $fwpartpath/_part_lrtos.a9s | grep -F $oldversion | grep -v '_' | awk '{print $1}'`))
-				len=$(expr length $newversion)
-				echo $newversion | dd of=$fwpartpath/_part_lrtos.a9s bs=1 seek=$offset count=$len conv=notrunc
+					printf "$blue Custom firmware from version $oldversion to $newversion.$normal\n"
+					exe eval cp $fwpartpath/_part_lrtos.a9s $fwpartpath/_part_lrtos.bak
+					offset=$((`strings -t d $fwpartpath/_part_lrtos.a9s | grep -F $oldversion | grep -v '_' | awk '{print $1}'`))
+					len=$(expr length $newversion)
+					echo $newversion | dd of=$fwpartpath/_part_lrtos.a9s bs=1 seek=$offset count=$len conv=notrunc
 				else
 					printf "$red An old version number is given but not a new one. No customization of the version number.$normal\n"
 				fi
