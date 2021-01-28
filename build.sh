@@ -133,6 +133,8 @@ if [ -n "$rootfs" ]; then
 	printf "$blue To not mess with git, all submodules files are deleted from rootfs\n"
 	exe eval sudo rm -fr $rootfs/usr/lib/python2.7/site-packages/Yi4kAPI
 	exe eval sudo rm $rootfs/usr/local/share/script/cmdyi.py
+	printf "$blue Hard resetting to HEAD.\n"
+	exe eval sudo git reset --hard HEAD
 else
 	printf "$red No folder to squash.$normal\n"
 fi
