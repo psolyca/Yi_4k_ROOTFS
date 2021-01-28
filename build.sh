@@ -27,7 +27,7 @@ exe() { echo -e "$yellow \$ ${@/eval/} $normal" ; "$@" ; }
 
 function usage()
 {
-	printf "Usage: $0 -r folder -s file [-f firmware] [-o oldversion -n newversion]\n"
+	printf "Usage: $0 -r folder -s file [-f firmware] [-o oldversion -n newversion] [-l strversion]\n"
 	printf "\t-r folder to squash, usually 1.10.9\n"
 	printf "\t-s name and path of the original squashed file, usually _part_rfs.a9s\n"
 	printf "\t   if you are building a firmware with -f,\n"
@@ -40,9 +40,10 @@ function usage()
 	printf "\t-o version of the original firmware, usually 1.10.9.\n"
 	printf "\t   This option must be used in conjonction of the -n option.\n"
 	printf "\t-n version of the custom firmware.\n"
+	printf "\t-l string added to -n for logging purpose.\n"
 }
 
-while getopts "r:s:f:o:n:" opt; do
+while getopts "r:s:f:o:n:l:" opt; do
 	case "$opt" in
 		h|help)
 			usage
@@ -62,6 +63,9 @@ while getopts "r:s:f:o:n:" opt; do
 			;;
 		n)
 			newversion=$OPTARG
+			;;
+		l)
+			strversion=$OPTARG
 			;;
 		*)
 			usage
@@ -106,6 +110,10 @@ if [ -n "$rootfs" ]; then
 	exe eval sudo cp cmdYi/src/Yi4kAPI/yiAPIListener.py $rootfs/usr/lib/python2.7/site-packages/Yi4kAPI/
 	exe eval sudo cp cmdYi/src/cmdyi.py $rootfs/usr/local/share/script/
 	exe eval sudo chmod +x $rootfs/usr/local/share/script/cmdyi.py
+	if [[ -n "$strversion" ]]; then
+		printf "$blue Added $newversion-$strversion to save_wifi_log.sh\n"
+		exe eval sudo sed -i "s/\\\[sed\\\]/\\\[$newversion-$strversion\\\]/g" $rootfs/usr/local/share/script/save_wifi_log.sh
+	fi
 	if [ -z "$sqhfile" ]; then
 		printf "$red Squashing with a default name _part_rfs.a9s in current path.\n"
 		printf "Building the firmware will not be allowed.$normal\n"
